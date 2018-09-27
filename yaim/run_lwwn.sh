@@ -25,7 +25,13 @@ case $i in
     ;;
     -h|--help)
     echo "Usage:"
-    echo "run_lwwn.sh [--ip=<value>] [--hostname=<value>] [--node=<hostname>:<ip>] [--net=<value>] " 
+    echo "run_lwwn.sh [--ip=<value>] [--hostname=<value>] [--node=<hostname>:<ip>] [--net=<value>] "
+    printf "\n"
+	echo "Options:"
+	echo "1. ip: REQUIRED; The IP address to be assigned to the container."
+    echo "2. host: REQUIRED; The hostname of this container on the attachable docker swarm overlay network"
+	echo "3. net: REQUIRED; The name of the attachable overlay network to which the container should attach on startup. You should already have created an attachable overlay network on your swarm manager."
+	echo "4. node: OPTIONAL; HOSTNAME:IP of other nodes on the same docker swarm network. The /etc/hosts inside the current container is appended with this info." 
     exit 0
 esac
 done
@@ -45,7 +51,6 @@ then
 elif [ -z $NODE ]
 then
     echo "Please note that no node hostname:ip has been specified. Therefore this can potentially create some troubles when trying to communicate over the overlay network."
-    exit 1
 fi
 
 echo  "Running docker run with this parameters:
