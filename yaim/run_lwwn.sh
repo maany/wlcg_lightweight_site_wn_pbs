@@ -48,9 +48,11 @@ elif [ -z "$NET" ]
 then
     echo "Please specify the name of the attachable docker overlay network that the container should connect to on startup."
     exit 1
-elif [ -z $NODE ]
+fi
+if [ $NODE_INDEX -eq 0 ]
 then
     echo "Please note that no node hostname:ip has been specified. Therefore this can potentially create some troubles when trying to communicate over the overlay network."
+    sleep 5
 fi
 
 echo  "Running docker run with this parameters:
