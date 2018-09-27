@@ -1,5 +1,7 @@
 #!/bin/bash
-
+declare -a NODES
+NODE_INDEX=0
+DOCKER_RUN="sudo docker run"
 # parse arguments
 for i in "$@"
 do
@@ -17,12 +19,14 @@ case $i in
     shift # past argument=value
     ;;
     --node=*)
-    NODE="${i#*=}"
+    NODES[NODE_INDEX]="${i#*=}"
+    NODE_INDEX=$((NODE_INDEX + 1))
     shift # past argument=value
     ;;
     -h|--help)
     echo "Usage:"
     echo "run_lwwn.sh [--ip=<value>] [--hostname=<value>] [--node=<hostname>:<ip>] [--net=<value>] " 
+    exit 0
 esac
 done
 
@@ -48,20 +52,24 @@ echo  "Running docker run with this parameters:
 	Hostname: $HOST
 	IP ADDR: $IP
 	Docker Network Name: $NET
-	Node hostname and IP: $NODE
- 	"
-sudo systemctl stop firewalld
-sudo docker build --rm  -t lwwn-umd4 .
+    "
+for NODE in ${NODES[@]}; do
+	echo "Node hostame and IP= $NODE"
+done
 
-sudo docker run -d \
-        -itd \
-        --privileged \
-        --name $HOST \
-        --net $NET \
-        --ip $IP \
-        --hostname $HOST \
-        --add-host $NODE \
-        --mount type=bind,source="$(pwd)"/wn-config,target=/wn-config \
-        maany/lwwn-umd4 \
-        /bin/bash
+DOCKER_RUN="$DOCKER_RUN -itd -d"
+DOCKER_RUN="$DOCKER_RUN --name ${HOST}"
+DOCKER_RUN="$DOCKER_RUN --net ${NET}"
+DOCKER_RUN="$DOCKER_RUN --ip ${IP}"
+DOCKER_RUN="$DOCKER_RUN --hostname ${HOST}"
+for NODE in ${NODES[@]}; do
+    DOCKER_RUN="$DOCKER_RUN --add-host ${NODE}"
+done
+DOCKER_RUN="$DOCKER_RUN --privileged"
+DOCKER_RUN="$DOCKER_RUN --mount type=bind,source="$(pwd)"/wn-config,target=/wn-config"
+DOCKER_RUN="$DOCKER_RUN maany/lwwn-umd4 /bin/bash"
+
+echo "The following docker command will be executed:"
+echo $DOCKER_RUN
+$DOCKER_RUN
 sudo docker exec -it lwwn-umd4 /wn-config/init.sh
